@@ -246,7 +246,7 @@ EOF
 
 ### 6. Replace the DB IP placeholder
 ```bash
-sed -i 's/<DB_VM_IP>/192.168.29.100/g' server.js   # use your actual DB VM IP
+sed -i 's/DB_VM_IP_PLACEHOLDER/192.168.29.36/g' server.js   # use your actual DB VM IP
 ```
 
 ### 7. Test the backend manually
