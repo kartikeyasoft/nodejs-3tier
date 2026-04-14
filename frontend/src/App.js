@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styled, { keyframes } from 'styled-components';
 
-const API_URL = `http://BACKEND_IP_PLACEHOLDER:5000`;
+const API_URL = '';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
