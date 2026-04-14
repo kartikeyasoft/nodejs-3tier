@@ -142,106 +142,9 @@ mkdir -p /home/ks/nodejs-3tier/backend
 cd /home/ks/nodejs-3tier/backend
 ```
 
-### 3. Create `package.json`
-```bash
-cat > package.json << 'EOF'
-{
-  "name": "magic-hub-backend",
-  "version": "1.0.0",
-  "description": "3-Tier Backend for Server Magic Input Hub",
-  "main": "server.js",
-  "scripts": { "start": "node server.js" },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "pg": "^8.11.3",
-    "dotenv": "^16.3.1"
-  }
-}
-EOF
-```
-
 ### 4. Install dependencies
 ```bash
 npm install
-```
-
-### 5. Create `server.js` (connect to remote DB)
-Replace `<DB_VM_IP>` with your actual database VM IP (e.g., `192.168.29.100`).
-
-```bash
-cat > server.js << 'EOF'
-const express = require('express');
-const cors = require('cors');
-const { Pool } = require('pg');
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-app.use(cors());
-app.use(express.json());
-
-const pool = new Pool({
-  host: '<DB_VM_IP>',
-  port: 5432,
-  user: 'magicuser',
-  password: 'magicpass',
-  database: 'magichub',
-});
-
-app.get('/api/todos', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM todos ORDER BY id');
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/todos', async (req, res) => {
-  const { text } = req.body;
-  if (!text) return res.status(400).json({ error: 'Spell text required' });
-  try {
-    const result = await pool.query(
-      'INSERT INTO todos (text, completed) VALUES ($1, $2) RETURNING *',
-      [text, false]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.put('/api/todos/:id', async (req, res) => {
-  const id = parseInt(req.params.id);
-  try {
-    const todo = await pool.query('SELECT * FROM todos WHERE id = $1', [id]);
-    if (todo.rows.length === 0) return res.status(404).json({ error: 'Spell not found' });
-    const newCompleted = !todo.rows[0].completed;
-    const result = await pool.query(
-      'UPDATE todos SET completed = $1 WHERE id = $2 RETURNING *',
-      [newCompleted, id]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete('/api/todos/:id', async (req, res) => {
-  const id = parseInt(req.params.id);
-  try {
-    const result = await pool.query('DELETE FROM todos WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Spell not found' });
-    res.json({ message: 'Spell banished', removed: result.rows[0] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
-EOF
 ```
 
 ### 6. Replace the DB IP placeholder
@@ -296,25 +199,28 @@ Should return the 5 default spells as JSON.
 
 ## 🎨 3. Frontend VM (VM3) – React + Nginx
 
-### 1. Install Nginx and Node.js
+### 1. Install Nginx and Node.js 
 ```bash
 sudo apt update
 sudo apt install -y nginx curl
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
-
-### 2. Clone or create the frontend source
-Assume you have the frontend code in `/home/ks/nodejs-3tier/frontend` with `package.json`, `public/`, and `src/` (App.js using relative API URLs: `const API_URL = '';`).
-
-### 3. Install dependencies and build
+### 2. Replace the backend placeholder IP
 ```bash
-cd /home/ks/nodejs-3tier/frontend
+sed -i "s|BACKEND_IP_PLACEHOLDER|192.168.29.38|g" src/App.js
+```
+*(Change `192.168.29.38` to your actual backend IP)*
+
+### 3. Build the React app
+```bash
+cd /path/to/nodejs-2tier/frontend
 npm install
 npm run build
 ```
+This creates a `build/` directory with static files.
 
-### 4. Deploy build to Nginx web root
+### 4. Copy the build to Nginx web root
 ```bash
 sudo rm -rf /var/www/html/*
 sudo cp -r build/* /var/www/html/
@@ -395,7 +301,3 @@ MIT © [KartikeyaSoft](https://kartikeyasoft.com)
 
 ---
 
-**Made with 🧙 by KartikeyaSoft Cloud Lab**
-```
-
-You can replace the placeholder image URL and IP addresses with your actual ones. This README now fully documents the **3‑tier** setup.
